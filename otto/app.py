@@ -31,6 +31,9 @@ class Matcher:
     def get_existing_match(self, item):
         return self.matches.get(item)
 
+    def is_in_queue(self, item):
+        return item in self.queue
+
     def remove_match(self, item):
         if item in self.matches:
             matched_item = self.matches.pop(item)
@@ -113,6 +116,11 @@ class Otto(discord.Client):
                     await guess.reply(f"Nope, {helper}. You have {remaining} more tries")
 
         elif message.content.startswith("$matchme"):
+            if self.matcher.is_in_queue(message.channel):
+                return await message.reply("**You're already in the matching queue. Wait till we find someone**")
+            elif self.matcher.get_existing_match(message.channel):
+                return await message.reply("**You're already connected. Use `$unmatch` to unmatch and try fresh.**")
+
             await message.reply("**Alright, connecting you rn... 🐶**")
             other_channel = await self.matcher.find_match(message.channel)
             await message.channel.send(f"**Found a match! {other_channel.name}**")
