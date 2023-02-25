@@ -123,7 +123,7 @@ class Otto(discord.Client):
 
             await message.reply("**Alright, connecting you rn... 🐶**")
             other_channel = await self.matcher.find_match(message.channel)
-            await message.channel.send(f"**Found a match! {other_channel.name}**")
+            await message.channel.send("**Found a match!**")
 
         elif message.content.startswith("$unmatch"):
             other_channel = self.matcher.remove_match(message.channel)
