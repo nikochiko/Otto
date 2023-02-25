@@ -14,6 +14,14 @@ This bot can match you with people in different channels and different servers w
 messages will be relayed from one to the other.
 - `$unmatch` -- Unmatch from the session. This will stop the relaying.
 
+### Chess
+
+This bot can create chess challenges for you on Lichess. The first two players to start the game with this link will get to play the game.
+
+- `$chess` | `$chess 5+3` -- Create a link for a chess game with the given time control. By default it is 5+3.
+- `$chess random` | `$chess random 5+3` -- Try to find a random match to play a chess game with, against someone else who ran the same command.
+Note that the time control matching isn't strict (yet), and you may get matches with a different time control than specified.
+
 ### Voice
 
 Bot can bark, meow, and if configured, make other noises too.

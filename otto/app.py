@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 from asyncio import sleep
 
 import discord
@@ -15,6 +16,7 @@ class Matcher:
     def __init__(self):
         self.queue = []
         self.matches = {}
+        self.sleep_interval = 2  # seconds
 
     async def find_match(self, item):
         if len(self.queue) > 0:
@@ -25,7 +27,7 @@ class Matcher:
         else:
             self.queue.append(item)
             while item in self.queue:
-                await sleep(2)
+                await sleep(self.sleep_interval)
             return self.matches[item]
 
     def get_existing_match(self, item):
@@ -47,6 +49,7 @@ class Otto(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.matcher = Matcher()
+        self.chess_matcher = Matcher()
 
     async def on_ready(self):
         print(f"Logged in as {self.user}")
@@ -66,90 +69,88 @@ class Otto(discord.Client):
         if message.author == self.user:
             return
 
-        elif message.content.startswith("$otto"):
-            await message.channel.send("Hello!")
-
-        elif "otto" in message.content.lower():
-            await message.reply("bhow wow")
-
-        elif message.content.startswith("$join"):
-            if not await self.get_voice_client(message):
-                return await message.reply("You're not connected to a voice channel")
-
-        elif message.content.startswith("$disconnect"):
-            client = await self.get_voice_client(message)
-            if client:
-                return await client.disconnect()
-            else:
-                return await message.reply("You're not connected to a voice channel")
-
-        elif ("send pics" in message.content.lower()
-                or "send nudes" in message.content.lower()):
-            url = requests.get("http://shibe.online/api/shibes?count=1").json()[0]
-            await message.reply(
-                "bow wow",
-                embed=discord.Embed(
-                    description="bow", title="wow").set_image(url=url))
-
-        elif message.content.startswith("$guess"):
-            await message.channel.send("Guess a number between 1 and 10")
-
-            is_valid = lambda m: m.author == message.author and m.content.isdigit()
-
-            answer = random.randint(1, 10)
-
-            tries = 3
-            for try_number in range(1, tries+1):
-                try:
-                    guess = await self.wait_for("message", check=is_valid, timeout=5.0)
-                except asyncio.TimeoutError:
-                    return await message.channel.send(f"You took too long! It was {answer}")
-
-                guess_number = int(guess.content)
-                if guess_number == answer:
-                    return await guess.reply("You got it!")
-                elif try_number == tries:
-                    return await guess.reply(f"Oops. It was {answer}")
+        match message.content.strip().split():
+            case ["$otto", *_]:
+                return await message.channel.send("Hello!")
+            case _ if "otto" in message.content.lower():
+                return await message.reply("bow wow")
+            case ["$join", *_]:
+                if not await self.get_voice_client(message):
+                    return await message.reply("You're not connected to a voice channel")
+            case ["$disconnect", *_]:
+                client = await self.get_voice_client(message)
+                if client:
+                    return await client.disconnect()
                 else:
-                    remaining = tries - try_number
-                    helper = "bigger" if answer > guess_number else "smaller"
-                    await guess.reply(f"Nope, {helper}. You have {remaining} more tries")
+                    return await message.reply("You're not connected to a voice channel")
+            case [("$pics" | "$nudes"), *_]:
+                url = requests.get("http://shibe.online/api/shibes?count=1").json()[0]
+                await message.reply(
+                    "bow wow",
+                    embed=discord.Embed(
+                        description="bow", title="wow").set_image(url=url))
+            case ["$matchme", *_]:
+                if self.matcher.is_in_queue(message.channel):
+                    return await message.reply("**You're already in the matching queue. Wait till we find someone**")
+                elif self.matcher.get_existing_match(message.channel):
+                    return await message.reply("**You're already connected. Use `$unmatch` to unmatch and try fresh.**")
 
-        elif message.content.startswith("$matchme"):
-            if self.matcher.is_in_queue(message.channel):
-                return await message.reply("**You're already in the matching queue. Wait till we find someone**")
-            elif self.matcher.get_existing_match(message.channel):
-                return await message.reply("**You're already connected. Use `$unmatch` to unmatch and try fresh.**")
+                await message.reply("**Alright, connecting you rn... 🐶**")
+                other_channel = await self.matcher.find_match(message.channel)
+                await message.channel.send("**Found a match!**")
+            case ["$unmatch", *_]:
+                other_channel = self.matcher.remove_match(message.channel)
+                if other_channel:
+                    await message.reply("**Unmatched**")
+                    await other_channel.send("**The other party unmatched.**")
+                else:
+                    await message.reply("Wasn't in an active match")
+            case ["$chess", "random", *args]:
+                await message.reply("**Waiting for a match...**")
+                other_message = await self.chess_matcher.find_match(message)
+                params = parse_chess_params(args)
+                url = get_chess_challenge_url(**params)
+                await message.reply(f"**Match found.** You're playing vs {other_message.author.name}\n{url}")
+                await sleep(self.chess_matcher.sleep_interval)
+                self.chess_matcher.remove_match(message)
+            case ["$chess", *args] | ["$chess", "lichess", *args]:
+                params = parse_chess_params(args)
+                url = get_chess_challenge_url(**params)
+                await message.reply(url)
+            case _ if message.content.startswith("$"):
+                clips = {
+                    "bark": "media/dogbark.ogg",
+                    "meow": "media/meow.ogg",
+                }
+                client = await self.get_voice_client(message)
+                if client:
+                    clipname = message.content.strip()[1:]
+                    clippath = clips.get(clipname)
+                    if clippath:
+                        client.play(discord.FFmpegPCMAudio(clippath))
+                        return await message.add_reaction("✅")
+                else:
+                    return await message.reply("You're not connected to a voice channel")
+            case _ if (other_channel := self.matcher.get_existing_match(message.channel)):
+                return await other_channel.send(f"**{message.author.name}:** {message.content}")
 
-            await message.reply("**Alright, connecting you rn... 🐶**")
-            other_channel = await self.matcher.find_match(message.channel)
-            await message.channel.send("**Found a match!**")
 
-        elif message.content.startswith("$unmatch"):
-            other_channel = self.matcher.remove_match(message.channel)
-            if other_channel:
-                await message.reply("**Unmatched**")
-                await other_channel.send("**The other party unmatched.**")
-            else:
-                await message.reply("Wasn't in an active match")
+def parse_chess_params(params):
+    result = {}
 
-        elif message.content.startswith("$"):
-            clips = {
-                "bark": "media/dogbark.ogg",
-                "meow": "media/meow.ogg",
-            }
-            client = await self.get_voice_client(message)
-            if client:
-                clipname = message.content.strip()[1:]
-                clippath = clips.get(clipname)
-                if clippath:
-                    client.play(discord.FFmpegPCMAudio(clippath))
-                    return await message.add_reaction("✅")
-            else:
-                return await message.reply("You're not connected to a voice channel")
+    time_control_regex = re.compile(r"([0-9]+)\+([0-9]+)")
+    for param in params:
+        if (m := time_control_regex.match(param)):
+            minutes = int(m.group(1))
+            increment = int(m.group(2))
+            result.update(clock_limit=minutes*60, clock_increment=increment)
 
-        elif (other_channel := self.matcher.get_existing_match(message.channel)):
-            return await other_channel.send(f"**{message.author.name}:** {message.content}")
+    return result
+
+def get_chess_challenge_url(clock_limit=300, clock_increment=3):
+    lichess_url = "https://lichess.org/api/challenge/open"
+    response = requests.post(lichess_url, data={"clock.limit": clock_limit, "clock.increment": clock_increment}).json()
+    return response["challenge"]["url"]
 
 
 intents = discord.Intents.default()
