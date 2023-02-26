@@ -36,6 +36,9 @@ class Matcher:
     def is_in_queue(self, item):
         return item in self.queue
 
+    def unqueue(self, item):
+        self.queue.remove(item)
+
     def remove_match(self, item):
         if item in self.matches:
             matched_item = self.matches.pop(item)
@@ -103,8 +106,11 @@ class Otto(discord.Client):
                 if other_channel:
                     await message.reply("**Unmatched**")
                     await other_channel.send("**The other party unmatched.**")
+                elif self.matcher.is_in_queue(message.channel):
+                    self.matcher.unqueue(message.channel)
+                    await message.reply("**Removed from matching queue**")
                 else:
-                    await message.reply("Wasn't in an active match")
+                    await message.reply("**Not in a match.**")
             case ["$chess", "random", *args]:
                 await message.reply("**Waiting for a match...**")
                 other_message = await self.chess_matcher.find_match(message)
