@@ -1,6 +1,7 @@
 import asyncio
 import random
 import re
+import yaml
 from asyncio import sleep
 
 import discord
@@ -10,6 +11,7 @@ import config
 
 
 token = config.token
+clips = yaml.safe_load("clips.yml")
 
 
 class Matcher:
@@ -124,10 +126,6 @@ class Otto(discord.Client):
                 url = get_chess_challenge_url(**params)
                 await message.reply(url)
             case _ if message.content.startswith("$"):
-                clips = {
-                    "bark": "media/dogbark.ogg",
-                    "meow": "media/meow.ogg",
-                }
                 client = await self.get_voice_client(message)
                 if client:
                     clipname = message.content.strip()[1:]
