@@ -11,7 +11,8 @@ import config
 
 
 token = config.token
-clips = yaml.safe_load("clips.yml")
+with open("clips.yml") as f:
+    clips = yaml.safe_load(f)
 
 
 class Matcher:
