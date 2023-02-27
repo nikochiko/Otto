@@ -151,7 +151,7 @@ class Otto(discord.Client):
                                 md_link(play_state["album_name"], play_state["album_url"]),
                                 md_link("Preview", play_state["preview_url"]),
                             ),
-                        ).set_image(play_state["image_url"])
+                        ).set_image(url=play_state["image_url"])
                         return await message.reply("", embed=embed)
                     else:
                         return await message.reply("you ain't playin' nothin")
