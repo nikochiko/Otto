@@ -10,7 +10,7 @@ app = Flask(__name__)
 @app.route("/spotify/callback")
 def spotify_save_token():
     user_id = request.args["state"]
-    code = request.args.get["code"]
+    code = request.args["code"]
 
     token = spotify.get_access_token(code=code)
 
