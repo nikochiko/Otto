@@ -71,7 +71,7 @@ def get_play_state(token):
         "album_name": response["item"]["album"]["name"],
         "album_url": response["item"]["album"]["href"],
         "preview_url": response["item"]["preview_url"],
-        "image_url": response["item"]["images"][1]["url"],
+        "image_url": response["item"]["album"]["images"][1]["url"],
     }
 
 
