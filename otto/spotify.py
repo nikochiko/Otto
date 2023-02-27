@@ -44,11 +44,18 @@ def get_access_token(*, code):
     return r.json()["access_token"]
 
 
+def get_headers(*, token, **extras):
+    return {
+        "Accept": "application/json", "Authorization": f"Bearer {token}",
+        **extras
+    }
+
+
 def get_play_state(token):
     endpoint = "/v1/me/player"
     url = api_base_url + endpoint
 
-    r = requests.get(url, headers={"Authorization": f"Bearer {token}"})
+    r = requests.get(url, headers=get_headers(token=token))
     r.raise_for_status()
     return r.json()
 
