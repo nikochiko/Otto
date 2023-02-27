@@ -8,6 +8,7 @@ client_id = config.spotify_client_id
 client_secret = config.spotify_client_secret
 redirect_uri = config.spotify_redirect_uri
 auth_base_url = config.spotify_auth_base_url
+api_base_url = config.spotify_api_base_url
 
 
 def get_authorize_url(*, state=None, scope=None):
@@ -41,6 +42,15 @@ def get_access_token(*, code):
         })
     r.raise_for_status()
     return r.json()["access_token"]
+
+
+def get_play_state(token):
+    endpoint = "/v1/me/player"
+    url = api_base_url + endpoint
+
+    r = requests.get(url, headers={"Authorization": f"Bearer {token}"})
+    r.raise_for_status()
+    return r.json()
 
 
 def get_basic_auth_value(username, password):

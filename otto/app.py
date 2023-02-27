@@ -140,7 +140,7 @@ class Otto(discord.Client):
                 if token is None:
                     return await message.reply("Your Spotify isn't connected with me.")
                 else:
-                    play_state = spotify.get_play_state()
+                    play_state = spotify.get_play_state(token=token)
                     if play_state:
                         now_playing = play_state["item"]["name"]
                         return await message.reply(now_playing)
