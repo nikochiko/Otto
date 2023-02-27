@@ -44,4 +44,4 @@ def get_access_token(*, code):
 
 
 def get_basic_auth_value(username, password):
-    return base64.b64encode(f"{username}:{password}").decode(encoding="utf-8")
+    return base64.b64encode(f"{username}:{password}".encode()).decode(encoding="utf-8")
