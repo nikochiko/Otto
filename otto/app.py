@@ -7,10 +7,10 @@ from asyncio import sleep
 import discord
 import requests
 
-import config
+from . import db
+from . import spotify
 
 
-token = config.token
 with open("clips.yml") as f:
     clips = yaml.safe_load(f)
 
@@ -126,6 +126,26 @@ class Otto(discord.Client):
                 params = parse_chess_params(args)
                 url = get_chess_challenge_url(**params)
                 await message.reply(url)
+            case ["$spotify", "connect"]:
+                url = spotify.get_authorize_url(
+                    state=str(message.author.id),
+                    scope="user-read-playback-state")
+                return await message.reply(
+                    "",
+                    embed=discord.Embed(
+                        description=f"Connect by going to [this url]({url}).")
+                )
+            case ["$spotify", "status"]:
+                token = db.get_value("spotify_token", message.author.id)
+                if token is None:
+                    return await message.reply("Your Spotify isn't connected with me.")
+                else:
+                    play_state = spotify.get_play_state()
+                    if play_state:
+                        now_playing = play_state["item"]["name"]
+                        return await message.reply(now_playing)
+                    else:
+                        return await message.reply("you ain't playin nothin'")
             case _ if message.content.startswith("$"):
                 client = await self.get_voice_client(message)
                 if client:
@@ -162,4 +182,3 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = Otto(intents=intents)
-client.run(token)
