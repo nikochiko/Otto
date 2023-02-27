@@ -13,7 +13,7 @@ def get_value(category, id):
     )
     row = result.fetchone()
     con.close()
-    return row and row.value or None
+    return row and row[0] or None
 
 
 def set_value(category, id, value):
