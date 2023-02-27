@@ -57,7 +57,22 @@ def get_play_state(token):
 
     r = requests.get(url, headers=get_headers(token=token))
     r.raise_for_status()
-    return r.content and r.json() or ""
+
+    if not r.content:
+        return {
+            "state": "unknown",
+        }
+
+    response = r.json()
+    return {
+        "state": "active",
+        "track_name": response["item"]["name"],
+        "track_url": response["item"]["href"],
+        "album_name": response["item"]["album"]["name"],
+        "album_url": response["item"]["album"]["href"],
+        "preview_url": response["item"]["preview_url"],
+        "image_url": response["item"]["images"][1]["url"],
+    }
 
 
 def get_basic_auth_value(username, password):

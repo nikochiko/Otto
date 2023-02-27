@@ -141,11 +141,20 @@ class Otto(discord.Client):
                     return await message.reply("Your Spotify isn't connected with me.")
                 else:
                     play_state = spotify.get_play_state(token=token)
-                    if play_state:
-                        now_playing = play_state["item"]["name"]
-                        return await message.reply(now_playing)
+                    if play_state["state"] == "active":
+                        embed = discord.Embed(
+                            title=md_link(
+                                play_state["track_name"],
+                                play_state["track_url"],
+                            ),
+                            description="From %s.\n%s" % (
+                                md_link(play_state["album_name"], play_state["album_url"]),
+                                md_link("Preview", play_state["preview_url"]),
+                            ),
+                        ).set_image(play_state["image_url"])
+                        return await message.reply("", embed=embed)
                     else:
-                        return await message.reply("you ain't playin nothin'")
+                        return await message.reply("you ain't playin' nothin")
             case _ if message.content.startswith("$"):
                 client = await self.get_voice_client(message)
                 if client:
@@ -176,6 +185,10 @@ def get_chess_challenge_url(clock_limit=300, clock_increment=3):
     lichess_url = "https://lichess.org/api/challenge/open"
     response = requests.post(lichess_url, data={"clock.limit": clock_limit, "clock.increment": clock_increment}).json()
     return response["challenge"]["url"]
+
+
+def md_link(text, href):
+    return f"[{text}]({href})"
 
 
 intents = discord.Intents.default()
