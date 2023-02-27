@@ -12,6 +12,7 @@ def get_value(category, id):
         (key,)
     )
     row = result.fetchone()
+    con.close()
     return row and row.value or None
 
 
@@ -28,6 +29,8 @@ def set_value(category, id, value):
             "INSERT INTO thing (key, value) VALUES (?, ?)",
             (key, value)
         )
+    con.commit()
+    con.close()
 
 
 def make_key(category, id):
