@@ -150,7 +150,7 @@ class Otto(discord.Client):
                             ),
                             url=play_state["track_url"],
                         ).set_image(url=play_state["image_url"])
-                        return await message.reply("", embed=embed)
+                        return await message.reply("Now playing...", embed=embed)
                     else:
                         return await message.reply("you ain't playin' nothin")
             case _ if message.content.startswith("$"):
