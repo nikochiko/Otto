@@ -57,7 +57,7 @@ def get_play_state(token):
 
     r = requests.get(url, headers=get_headers(token=token))
     r.raise_for_status()
-    return r.json()
+    return r.content and r.json() or ""
 
 
 def get_basic_auth_value(username, password):
