@@ -143,14 +143,12 @@ class Otto(discord.Client):
                     play_state = spotify.get_play_state(token=token)
                     if play_state["state"] == "active":
                         embed = discord.Embed(
-                            title=md_link(
-                                play_state["track_name"],
-                                play_state["track_url"],
-                            ),
+                            title=play_state["track_name"],
                             description="From %s.\n%s" % (
                                 md_link(play_state["album_name"], play_state["album_url"]),
                                 md_link("Preview", play_state["preview_url"]),
                             ),
+                            url=play_state["track_url"],
                         ).set_image(url=play_state["image_url"])
                         return await message.reply("", embed=embed)
                     else:
