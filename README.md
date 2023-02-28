@@ -31,6 +31,14 @@ Bot can bark, meow, and if configured, make other noises too.
 - `$disconnect` -- Disconnect from the voice channel it is in
 - `$join` -- Join the voice channel you're in
 
+### Spotify
+
+Bot can connect with your Spotify and do things with it. For now it can only tell you what song you are currently listening to, but more functionality
+can be added in the future as it seems useful.
+
+- `$spotify connect` -- Get an OAuth URL that can be used to hand the bot an API key for getting your data
+- `$spotify status` -- Use this token to get status of what you're currenly playing. Replies with an embed of the track name, album name, album cover image, and an audio preview.
+
 ### Others
 
 `$otto` -- This is a ping kind of test command. Otto should reply to this with a "Hello!" if it is working.
